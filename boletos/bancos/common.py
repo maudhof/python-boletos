@@ -3,10 +3,19 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 import os
 import sys
+import logging
 
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    #format="%(asctime)-15s %(clientip)s %(user)-8s %(message)s"
+)
+
+d = {'clientip': '192.168.0.1', 'user': 'maudhof'}
 
 DATE_PARSE_FORMAT = '%d%m%y'
 CURRENCY_PARSE_FORMAT = '%d.%.2d'
+
 
 def _parse_date(s):
     try:
@@ -14,11 +23,60 @@ def _parse_date(s):
     except ValueError:
         return None
 
+
 def _parse_currency(s):
     return Decimal(CURRENCY_PARSE_FORMAT % (int(s[:-2]), int(s[-2:])))
 
+
 def _split_lines(s):
     return filter(None, map(lambda l: l.strip(' '), s.split('\n')))
+
+
+def modulo_11_base(num):
+    soma = 0
+    peso = 2
+    for i in range(len(str(num))-1, -1, -1):
+        parcial = int(str(num)[i]) * peso
+        soma += parcial
+        if peso == 9:
+            peso = 2
+        else:
+            peso += 1
+    return 11 - (soma % 11)
+
+
+def modulo11_0(num):
+    ret = modulo_11_base(num)
+    if ret > 9:
+        return 0
+    return ret
+
+
+def modulo11_1(num):
+    ret = modulo_11_base(num)
+    if ret > 9:
+        return 1
+    return ret
+
+
+def modulo10(num):
+    soma = 0
+    peso = 2
+    for i in range(len(str(num))-1, -1, -1):
+        parcial = int(str(num)[i]) * peso
+        if parcial > 9:
+            parcial = int(str(parcial)[0]) + int(str(parcial)[1])
+        soma += parcial
+        if peso == 2:
+            peso = 1
+        else:
+            peso = 2
+    resto10 = soma % 10
+    if resto10 == 0:
+        modulo10 = 0
+    else:
+        modulo10 = 10 - resto10
+    return modulo10
 
 
 class Boleto(object):
@@ -33,7 +91,7 @@ class Boleto(object):
 
     def __init__(self, *args, **kwargs):
         self.valor_documento = kwargs.pop('valor_documento', 0)
-        self.nosso_numero = str(kwargs.pop('nosso_numero', 0)).zfill(8)[:8]
+        self.nosso_numero = str(kwargs.pop('nosso_numero', 0)) #.zfill(8)[:8]
         self.numero_documento = kwargs.pop('numero_documento', 0)
         self.especie_documento = kwargs.pop('especie_documento', '')
         self.cedente = kwargs.pop('cedente', '')
@@ -53,43 +111,6 @@ class Boleto(object):
         self.sacado = _split_lines(kwargs.pop('sacado', "")) # 3 lines, 80 cols
         self.sacador_avalista = kwargs.pop('sacador_avalista', '')
         self.endereco_cedente = kwargs.pop('endereco_cedente', '') 
-
-    def _modulo10(self, num):
-        soma = 0
-        peso = 2
-        for i in range(len(str(num))-1, -1, -1):
-            parcial = int(str(num)[i]) * peso
-            if parcial > 9:
-                parcial = int(str(parcial)[0]) + int(str(parcial)[1])
-            soma += parcial
-            if peso == 2:
-                peso = 1
-            else:
-                peso = 2
-        resto10 = soma % 10
-        if resto10 == 0:
-            modulo10 = 0
-        else:
-            modulo10 = 10 - resto10
-        return modulo10
-
-    def __modulo_11_base__(self, num):
-        soma = 0
-        peso = 2
-        for i in range(len(str(num))-1, -1, -1):
-            parcial = int(str(num)[i]) * peso
-            soma += parcial
-            if peso == 9:
-                peso = 2
-            else:
-                peso += 1
-        return 11 - (soma % 11)
-
-    def _modulo11(self, num):
-        resultado = self.__modulo_11_base__(num)
-        if resultado > 9:
-            return 1
-        return resultado
 
     @property
     def logo_path(self):

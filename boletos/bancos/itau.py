@@ -1,5 +1,5 @@
 # coding: utf-8
-from common import Boleto, CnabParser
+from common import Boleto, CnabParser, modulo10, modulo11_0, modulo11_1
 
 
 class BoletoItau(Boleto):
@@ -14,7 +14,7 @@ class BoletoItau(Boleto):
             self.carteira,
             self.nosso_numero,
         )
-        return self._modulo10(num)
+        return modulo10(num)
 
     def _dac_codigo_barras(self):
         num = "%3s%1s%4s%10s%3s%8s%1s%4s%6s000" % (
@@ -28,7 +28,7 @@ class BoletoItau(Boleto):
             self.cedente_agencia,
             self.cedente_conta,
         )
-        return self._modulo11(num)
+        return modulo11_1(num)
 
     @property
     def cedente_agencia_codigo(self):
@@ -50,7 +50,7 @@ class BoletoItau(Boleto):
     def banco_dv(self):
         return "%s-%s" % (
             self.banco,
-            self._modulo11(self.banco)
+            modulo11_1(self.banco)
         )
 
     @property
@@ -61,20 +61,20 @@ class BoletoItau(Boleto):
             self.carteira,
             self.nosso_numero[:2],
         )
-        bloco1dv = self._modulo10(bloco1)
+        bloco1dv = modulo10(bloco1)
 
         bloco2 = "%6s%1s%3s" % (
             self.nosso_numero[2:],
             self._dac_nosso_numero(),
             self.cedente_agencia[0:3],
         )
-        bloco2dv = self._modulo10(bloco2)
+        bloco2dv = modulo10(bloco2)
 
         bloco3 = "%1s%6s000" % (
             self.cedente_agencia[3:],
             self.cedente_conta,
         )
-        bloco3dv = self._modulo10(bloco3)
+        bloco3dv = modulo10(bloco3)
 
         bloco4 = self._dac_codigo_barras()
 

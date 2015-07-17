@@ -1,5 +1,5 @@
 # coding: utf-8
-from common import Boleto
+from common import Boleto, modulo10, modulo11_0, modulo11_1
 
 
 class BoletoBancoReal(Boleto):
@@ -8,7 +8,7 @@ class BoletoBancoReal(Boleto):
 
     def _digitao_cobranca(self):
         num = "%s%s%s" % (self.nosso_numero, self.cedente_agencia, self.cedente_conta)
-        return self._modulo10(num)
+        return modulo10(num)
 
     def _digitao_codigo_barras(self):
         num = "%3s%1s%4s%10s%4s%7s%1s%13s" % (
@@ -21,7 +21,7 @@ class BoletoBancoReal(Boleto):
             self._digitao_cobranca(),
             self.nosso_numero,
         )
-        return self._modulo11(num)
+        return modulo11_1(num)
 
     @property
     def cedente_agencia_codigo(self):
@@ -30,7 +30,7 @@ class BoletoBancoReal(Boleto):
 
     @property
     def banco_dv(self):
-        return "%s-%s" % (self.banco, self._modulo11(self.banco))
+        return "%s-%s" % (self.banco, modulo11_1(self.banco))
 
     @property
     def linha_digitavel(self):
@@ -41,19 +41,19 @@ class BoletoBancoReal(Boleto):
             self.cedente_agencia[1:],
             self.cedente_conta[0]
         )
-        bloco1dv = self._modulo10(bloco1)
+        bloco1dv = modulo10(bloco1)
 
         bloco2 = "%6s%1s%3s" % (
             self.cedente_conta[1:],
             self._digitao_cobranca(),
             self.nosso_numero[0:3]
         )
-        bloco2dv = self._modulo10(bloco2)
+        bloco2dv = modulo10(bloco2)
 
         bloco3 = "%10s" % (
             self.nosso_numero[3:]
         )
-        bloco3dv = self._modulo10(bloco3)
+        bloco3dv = modulo10(bloco3)
 
         bloco4 = self._digitao_codigo_barras()
 
